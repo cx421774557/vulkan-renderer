@@ -40,6 +40,7 @@ jobs:
           # Install build tools
           apt install -y \
             clang \
+            clang-tidy \
             cmake \
             curl \
             libx11-dev \
@@ -88,10 +89,24 @@ jobs:
             -GNinja \
             ${{ matrix.config.cmake_configure_options }}
 
+          cmake . \
+            -Bbuild-clang_tidy \
+            -DCMAKE_BUILD_TYPE=${{ env.inexor_build_type }} \
+            -DINEXOR_USE_VMA_RECORDING=OFF \
+            -DINEXOR_USE_CLANG_TIDY=ON \
+            -GNinja \
+            ${{ matrix.config.cmake_configure_options }}
+
       - name: Build
         shell: bash
         run: |
           cmake --build build
+
+      - name: Clang Tidy
+        continue-on-error: true
+        shell: bash
+        run: |
+          cmake --build build-clang_tidy
 
       - name: Prepare upload
         run: |
@@ -139,7 +154,7 @@ jobs:
         run: |
           pip3 install wheel setuptools
           pip3 install conan
-          choco install ninja
+          choco install ninja llvm
 
       - name: Install Vulkan SDK
         shell: pwsh
@@ -166,10 +181,22 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ env.inexor_build_type }} `
             ${{ matrix.config.cmake_configure_options }}
 
+          cmake . `
+            -Bbuild-clang_tidy `
+            -DCMAKE_BUILD_TYPE=${{ env.inexor_build_type }} `
+            -DINEXOR_USE_CLANG_TIDY=ON `
+            ${{ matrix.config.cmake_configure_options }}
+
       - name: Build
         shell: pwsh
         run: |
           cmake --build build ${{ matrix.config.cmake_build_options }}
+
+      - name: Clang Tidy
+        continue-on-error: true
+        shell: bash
+        run: |
+          cmake --build build-clang_tidy
 
       - name: Prepare upload
         shell: pwsh

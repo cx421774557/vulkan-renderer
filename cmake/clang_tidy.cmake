@@ -1,0 +1,6 @@
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable")
+if (CLANG_TIDY_EXE)
+    message(STATUS "Clang Tidy: ${CLANG_TIDY_EXE}")
+    configure_file("${PROJECT_SOURCE_DIR}/.clang-tidy" ${PROJECT_BINARY_DIR} COPYONLY)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}" "-warnings-as-errors=*")
+endif ()
