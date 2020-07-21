@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <stdexcept>
 
 namespace inexor::vulkan_renderer::wrapper {
 
@@ -29,7 +30,6 @@ private:
 
     GPUMemoryBuffer vertex_buffer;
 
-    // Index buffer, if available.
     std::optional<GPUMemoryBuffer> index_buffer;
 
     std::uint32_t number_of_vertices = 0;
@@ -48,16 +48,28 @@ public:
     MeshBuffer &operator=(const MeshBuffer &) = delete;
     MeshBuffer &operator=(MeshBuffer &&) noexcept = default;
 
-    /// @brief Creates a new vertex buffer and an associated index buffer.
-    MeshBuffer(const VkDevice device, VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index,
+    /// @brief Creates a new vertex buffer with an associated index buffer and copies memory into it.
+    MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index,
                const VmaAllocator vma_allocator, const std::string &name, const VkDeviceSize size_of_vertex_structure,
                const std::size_t number_of_vertices, void *vertices, const VkDeviceSize size_of_index_structure,
                const std::size_t number_of_indices, void *indices);
 
-    /// @brief Creates a vertex buffer without index buffer.
-    MeshBuffer(const VkDevice device, VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index,
+    /// @brief Creates a new vertex buffer with an associated index buffer but does not copy memory into it.
+    /// This is useful when you know the size of the buffer but you don't know it's data values yet.
+    MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index,
+               const VmaAllocator vma_allocator, const std::string &name, const VkDeviceSize size_of_vertex_structure,
+               const std::size_t number_of_vertices, const VkDeviceSize size_of_index_structure,
+               const std::size_t number_of_indices);
+
+    /// @brief Creates a vertex buffer without index buffer, but copies the vertex data into it.
+    MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index,
                const VmaAllocator vma_allocator, const std::string &name, const VkDeviceSize size_of_vertex_structure,
                const std::size_t number_of_vertices, void *vertices);
+
+    /// @brief Creates a vertex buffer without index buffer and copies no vertex data into it.
+    MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index,
+               const VmaAllocator vma_allocator, const std::string &name, const VkDeviceSize size_of_vertex_structure,
+               const std::size_t number_of_vertices);
 
     ~MeshBuffer();
 
@@ -66,12 +78,15 @@ public:
     }
 
     [[nodiscard]] bool has_index_buffer() const {
-        return index_buffer.has_value();
+        return (index_buffer) ? true : false;
     }
 
-    [[nodiscard]] std::optional<VkBuffer> get_index_buffer() const {
-        assert(index_buffer);
-        return index_buffer->get_buffer();
+    [[nodiscard]] VkBuffer get_index_buffer() const {
+        if(!index_buffer) {
+            throw std::runtime_error(std::string("Error: No index buffer for mesh "+ name +"!"));
+        }
+
+        return index_buffer.value().get_buffer();
     }
 
     [[nodiscard]] const std::uint32_t get_vertex_count() const {
@@ -82,9 +97,32 @@ public:
         return number_of_indices;
     }
 
-    // TODO: Update data!
-    // void update_vertex_buffer();
-    // void update_index_buffer();
+    [[nodiscard]] auto get_vertex_buffer_address() const {
+        return vertex_buffer.get_allocation_info().pMappedData;
+    }
+    
+    [[nodiscard]] auto get_index_buffer_address() const {
+        if(!index_buffer) {
+            throw std::runtime_error(std::string("Error: No index buffer for mesh "+ name +"!"));
+        }
+
+        return index_buffer.value().get_allocation_info().pMappedData;
+    }
+    
+    /// 
+    /// 
+    /// 
+    /// 
+    void update_vertices(const void* source, const std::size_t vertex_struct_size, const std::size_t vertex_count, const std::size_t vertex_offset);
+
+    
+    /// 
+    /// 
+    /// 
+    /// 
+    void update_indices(const void* source, const std::size_t index_structure_size, const std::size_t index_count, const std::size_t index_offset);
+
+
 };
 
 } // namespace inexor::vulkan_renderer::wrapper

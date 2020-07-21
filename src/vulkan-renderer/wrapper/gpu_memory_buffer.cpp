@@ -11,9 +11,9 @@ GPUMemoryBuffer::GPUMemoryBuffer(GPUMemoryBuffer &&other) noexcept
       allocation(std::exchange(other.allocation, nullptr)), allocation_info(std::move(other.allocation_info)),
       allocation_ci(std::move(other.allocation_ci)) {}
 
-GPUMemoryBuffer::GPUMemoryBuffer(const VkDevice &device, const VmaAllocator &vma_allocator, const std::string &name,
-                                 const VkDeviceSize &size, const VkBufferUsageFlags &buffer_usage,
-                                 const VmaMemoryUsage &memory_usage)
+GPUMemoryBuffer::GPUMemoryBuffer(const VkDevice device, const VmaAllocator vma_allocator, const std::string &name,
+                                 const VkDeviceSize size, const VkBufferUsageFlags buffer_usage,
+                                 const VmaMemoryUsage memory_usage)
     : device(device), vma_allocator(vma_allocator), name(name), buffer_size(size) {
     assert(device);
     assert(vma_allocator);
@@ -64,9 +64,9 @@ GPUMemoryBuffer::GPUMemoryBuffer(const VkDevice &device, const VmaAllocator &vma
     }
 }
 
-GPUMemoryBuffer::GPUMemoryBuffer(const VkDevice &device, const VmaAllocator &vma_allocator, const std::string &name,
-                                 const VkDeviceSize &buffer_size, void *data, const std::size_t data_size,
-                                 const VkBufferUsageFlags &buffer_usage, const VmaMemoryUsage &memory_usage)
+GPUMemoryBuffer::GPUMemoryBuffer(const VkDevice device, const VmaAllocator vma_allocator, const std::string &name,
+                                 const VkDeviceSize buffer_size, void *data, const std::size_t data_size,
+                                 const VkBufferUsageFlags buffer_usage, const VmaMemoryUsage memory_usage)
     : GPUMemoryBuffer(device, vma_allocator, name, buffer_size, buffer_usage, memory_usage) {
     assert(device);
     assert(vma_allocator);
@@ -81,7 +81,13 @@ GPUMemoryBuffer::GPUMemoryBuffer(const VkDevice &device, const VmaAllocator &vma
 
 GPUMemoryBuffer::~GPUMemoryBuffer() {
     spdlog::trace("Destroying GPU memory buffer.");
-    vmaDestroyBuffer(vma_allocator, buffer, allocation);
+
+    if (buffer) {
+        assert(vma_allocator);
+        assert(buffer);
+        assert(allocation);
+        vmaDestroyBuffer(vma_allocator, buffer, allocation);
+    }
 }
 
 } // namespace inexor::vulkan_renderer::wrapper

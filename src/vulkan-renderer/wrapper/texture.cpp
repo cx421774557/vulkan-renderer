@@ -17,10 +17,12 @@ Texture::Texture(Texture &&other) noexcept
       texture_image_format(other.texture_image_format), copy_command_buffer(std::move(other.copy_command_buffer)) {}
 
 Texture::Texture(const VkDevice device, const VkPhysicalDevice graphics_card, const VmaAllocator vma_allocator,
-                 void *texture_data, const std::size_t texture_size, const std::string &name,
-                 const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index)
+                 void *texture_data, const int texture_width, const int texture_height, const std::size_t texture_size,
+                 const std::string &name, const VkQueue data_transfer_queue,
+                 const std::uint32_t data_transfer_queue_family_index)
     : name(name), file_name(file_name), device(device), graphics_card(graphics_card),
-      data_transfer_queue(data_transfer_queue), vma_allocator(vma_allocator),
+      data_transfer_queue_family_index(data_transfer_queue_family_index), data_transfer_queue(data_transfer_queue),
+      vma_allocator(vma_allocator), texture_width(texture_width), texture_height(texture_height),
       copy_command_buffer(device, data_transfer_queue, data_transfer_queue_family_index) {
 
     create_texture(texture_data, texture_size);
@@ -63,6 +65,9 @@ Texture::Texture(const VkDevice device, const VkPhysicalDevice graphics_card, co
 }
 
 void Texture::create_texture(void *texture_data, const std::size_t texture_size) {
+
+    assert(texture_width > 0);
+    assert(texture_height > 0);
 
     // For now, we will not generate mip-maps automatically.
     // TODO: Generate mip-maps automatically!

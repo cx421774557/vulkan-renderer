@@ -72,13 +72,15 @@ public:
     /// @param graphics_card [in] The graphics card.
     /// @param vma_allocator [in] The Vulkan Memory Allocator library handle.
     /// @param texture_data [in] The texture data.
+    /// @param texture_width [in] The width of the texture.
+    /// @param texture_height [in] The height of the texture.
     /// @param texture_size [in] The size of the texture.
     /// @param name [in] The internal memory allocation name of the texture.
     /// @param data_transfer_queue [in] The Vulkan data transfer queue.
     /// @param data_transfer_queue_family_index [in] The queue family index of the data transfer queue to use.
     Texture(const VkDevice device, const VkPhysicalDevice graphics_card, const VmaAllocator vma_allocator,
-            void *texture_data, const std::size_t texture_size, const std::string &name,
-            const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index);
+            void *texture_data, const int texture_width, const int texture_height,
+            const std::size_t texture_size, const std::string &name, const VkQueue data_transfer_queue, const std::uint32_t data_transfer_queue_family_index);
 
     ~Texture();
 

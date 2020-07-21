@@ -143,8 +143,9 @@ VkResult VulkanRenderer::record_command_buffers() {
 
             // TODO: This does not specify the order of rendering!
             // gltf_model_manager->render_all_models(command_buffers[i], pipeline_layout, i);
-
-            // TODO: Draw imgui user interface.
+            
+            // Draw imgui user interface on top of rendered image.
+            imgui_overlay->draw(current_command_buffer);
         }
         // End of render pass.
         // ----------------------------------------------------------------------------------------------------------------

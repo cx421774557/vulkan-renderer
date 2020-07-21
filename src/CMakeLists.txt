@@ -14,6 +14,8 @@ add_library(
     vulkan-renderer/settings_decision_maker.cpp
     vulkan-renderer/thread_pool.cpp
     vulkan-renderer/time_step.cpp
+	
+    vulkan-renderer/imgui/imgui_overlay.cpp
 
     vulkan-renderer/tools/cla_parser.cpp
     vulkan-renderer/tools/file.cpp

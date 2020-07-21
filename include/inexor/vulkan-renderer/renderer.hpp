@@ -30,6 +30,7 @@
 #include "inexor/vulkan-renderer/wrapper/vma.hpp"
 #include "inexor/vulkan-renderer/wrapper/window.hpp"
 #include "inexor/vulkan-renderer/wrapper/window_surface.hpp"
+#include "inexor/vulkan-renderer/imgui/imgui_overlay.hpp"
 
 #include <vulkan/vulkan_core.h>
 
@@ -148,6 +149,8 @@ protected:
     std::unique_ptr<wrapper::RenderPass> renderpass;
 
     std::unique_ptr<wrapper::Framebuffer> framebuffer;
+    
+    std::unique_ptr<imgui::ImguiOverlay> imgui_overlay;
 
     /// @brief Create a physical device handle.
     /// @param graphics_card The regarded graphics card.

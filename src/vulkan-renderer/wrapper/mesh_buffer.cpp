@@ -4,13 +4,12 @@
 #include <spdlog/spdlog.h>
 
 namespace inexor::vulkan_renderer::wrapper {
-
 MeshBuffer::MeshBuffer(MeshBuffer &&other) noexcept
     : name(std::move(other.name)), vertex_buffer(std::move(other.vertex_buffer)),
-      index_buffer(std::move(other.index_buffer)), number_of_vertices(other.number_of_vertices),
+      index_buffer(std::exchange(other.index_buffer, std::nullopt)), number_of_vertices(other.number_of_vertices),
       number_of_indices(other.number_of_indices) {}
 
-MeshBuffer::MeshBuffer(const VkDevice device, VkQueue data_transfer_queue,
+MeshBuffer::MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue,
                        const std::uint32_t data_transfer_queue_family_index, const VmaAllocator vma_allocator,
                        const std::string &name, const VkDeviceSize size_of_vertex_structure,
                        const std::size_t number_of_vertices, void *vertices, const VkDeviceSize size_of_index_structure,
@@ -20,9 +19,9 @@ MeshBuffer::MeshBuffer(const VkDevice device, VkQueue data_transfer_queue,
     // created!.
     : vertex_buffer(device, vma_allocator, name, size_of_vertex_structure * number_of_vertices,
                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY),
-      index_buffer(GPUMemoryBuffer(device, vma_allocator, name, size_of_index_structure * number_of_vertices,
-                                   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                   VMA_MEMORY_USAGE_CPU_ONLY)) {
+      index_buffer(std::make_optional<GPUMemoryBuffer>(
+          device, vma_allocator, name, size_of_index_structure * number_of_indices,
+          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY)) {
     assert(device);
     assert(vma_allocator);
     assert(!name.empty());
@@ -65,6 +64,18 @@ MeshBuffer::MeshBuffer(const VkDevice device, VkQueue data_transfer_queue,
 MeshBuffer::MeshBuffer(const VkDevice device, VkQueue data_transfer_queue,
                        const std::uint32_t data_transfer_queue_family_index, const VmaAllocator vma_allocator,
                        const std::string &name, const VkDeviceSize size_of_vertex_structure,
+                       const std::size_t number_of_vertices, const VkDeviceSize size_of_index_structure,
+                       const std::size_t number_of_indices)
+
+    : vertex_buffer(device, vma_allocator, name, size_of_vertex_structure * number_of_vertices,
+                    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY),
+      index_buffer(std::make_optional<GPUMemoryBuffer>(
+          device, vma_allocator, name, size_of_index_structure * number_of_indices,
+          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY)) {}
+
+MeshBuffer::MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue,
+                       const std::uint32_t data_transfer_queue_family_index, const VmaAllocator vma_allocator,
+                       const std::string &name, const VkDeviceSize size_of_vertex_structure,
                        const std::size_t number_of_vertices, void *vertices)
     // It's no problem to create the vertex buffer and index buffer before the corresponding staging buffers are
     // created!.
@@ -94,6 +105,48 @@ MeshBuffer::MeshBuffer(const VkDevice device, VkQueue data_transfer_queue,
     staging_buffer_for_vertices.upload_data_to_gpu(vertex_buffer);
 }
 
+MeshBuffer::MeshBuffer(const VkDevice device, const VkQueue data_transfer_queue,
+                       const std::uint32_t data_transfer_queue_family_index, const VmaAllocator vma_allocator,
+                       const std::string &name, const VkDeviceSize size_of_vertex_structure,
+                       const std::size_t number_of_vertices)
+
+    : vertex_buffer(device, vma_allocator, name, size_of_vertex_structure * number_of_vertices,
+                    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY),
+      index_buffer(std::nullopt), number_of_indices(static_cast<std::uint32_t>(number_of_indices)) {}
+
 MeshBuffer::~MeshBuffer() {}
+
+void MeshBuffer::update_vertices(const void *source, const std::size_t vertex_struct_size,
+                                 const std::size_t vertex_count, const std::size_t vertex_offset) {
+    assert(source);
+    assert(vertex_count > 0);
+    assert(vertex_struct_size > 0);
+    assert(vertex_buffer.get_allocation_info().pMappedData);
+
+    spdlog::error("TODO: Add offset!");
+
+    auto target = vertex_buffer.get_allocation_info().pMappedData;
+    auto memory_size = vertex_struct_size * vertex_count;
+
+    spdlog::trace("Updating vertex buffer {} with {} bytes, offset: {}.", this->name, memory_size, vertex_offset);
+    std::memcpy(target, source, memory_size);
+}
+
+void MeshBuffer::update_indices(const void *source, const std::size_t index_structure_size,
+                                const std::size_t index_count, const std::size_t index_offset) {
+    assert(index_buffer);
+    assert(source);
+    assert(index_count > 0);
+    assert(index_structure_size > 0);
+    assert(index_buffer.value().get_allocation_info().pMappedData);
+
+    spdlog::error("TODO: Add offset!");
+
+    auto target_address = index_buffer.value().get_allocation_info().pMappedData;
+
+    spdlog::trace("Updating index buffer {} with {} bytes, offset: {}.", this->name, index_structure_size * index_count,
+                  index_offset);
+    std::memcpy(target_address, source, index_structure_size * index_count);
+}
 
 } // namespace inexor::vulkan_renderer::wrapper

@@ -171,6 +171,68 @@ VkResult Application::load_shaders() {
     return VK_SUCCESS;
 }
 
+VkResult Application::create_imgui_overlay() {
+
+    imgui_overlay = std::make_unique<imgui::ImguiOverlay>();
+
+    VkResult result =
+        imgui_overlay->init(vkdevice->get_device(), vkdevice->get_physical_device(), vkdevice->get_graphics_queue(),
+                            vkdevice->get_graphics_queue_family_index(), vma->get_allocator());
+    vulkan_error_check(result);
+
+    result = imgui_overlay->prepareResources();
+    vulkan_error_check(result);
+
+    result = imgui_overlay->preparePipeline(pipeline_cache, renderpass->get());
+    vulkan_error_check(result);
+
+    return VK_SUCCESS;
+}
+
+VkResult Application::update_imgui_overlay() {
+    ImGuiIO &io = ImGui::GetIO();
+
+    io.DisplaySize = ImVec2((float)window_width, (float)window_height);
+
+    // TODO: Does that work? We can't just pass time_passed since it's 0 in the beginning and imgui doesn't accept that.
+    io.DeltaTime = std::clamp(time_passed, 0.001f, 100.0f);
+
+    double current_cursor_x;
+    double current_cursor_y;
+
+    glfwGetCursorPos(window->get(), &current_cursor_x, &current_cursor_y);
+
+    io.MousePos = ImVec2(static_cast<float>(current_cursor_x), static_cast<float>(current_cursor_y));
+    io.MouseDown[0] = (glfwGetMouseButton(window->get(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    io.MouseDown[1] = (glfwGetMouseButton(window->get(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+
+    ImGui::NewFrame();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+    ImGui::SetNextWindowPos(ImVec2(10, 10));
+    ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Vulkan Example", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+    ImGui::TextUnformatted("Insert fancy title here");
+    ImGui::TextUnformatted("Insert fancy GPU name here");
+    ImGui::Text("%.2f ms/frame (%.1d fps)", 133.0f, 101);
+
+    ImGui::PushItemWidth(110.0f * imgui_overlay->scale);
+    // OnUpdateUIOverlay(&UIOverlay);
+    ImGui::PopItemWidth();
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+    ImGui::Render();
+
+    if (imgui_overlay->update() || imgui_overlay->updated) {
+        record_command_buffers();
+        imgui_overlay->updated = false;
+    }
+
+    return VK_SUCCESS;
+}
+
 /// TODO: Refactor rendering method!
 /// TODO: Finish present call using transfer queue.
 VkResult Application::render_frame() {
@@ -523,6 +585,10 @@ VkResult Application::init(int argc, char **argv) {
     result = create_pipeline();
     vulkan_error_check(result);
 
+    // Initialise imgui user interface library.
+    result = create_imgui_overlay();
+    vulkan_error_check(result);
+
     result = create_frame_buffers();
     vulkan_error_check(result);
 
@@ -623,6 +689,8 @@ void Application::run() {
         update_keyboard_input();
         update_mouse_input();
         update_cameras();
+
+        update_imgui_overlay();
 
         time_passed = stopwatch.get_time_step();
     }

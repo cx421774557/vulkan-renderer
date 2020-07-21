@@ -7,6 +7,8 @@ set(
     SHADERS
     fragmentshader.frag
     vertexshader.vert
+    ui.frag
+    ui.vert
 )
 
 foreach(SHADER ${SHADERS})

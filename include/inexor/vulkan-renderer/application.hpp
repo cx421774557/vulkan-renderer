@@ -78,6 +78,10 @@ private:
 
     VkResult update_mouse_input();
 
+    VkResult update_imgui_overlay();
+
+    VkResult create_imgui_overlay();
+
     // TODO: Refactor!
     double cursor_x, cursor_y;
 
