@@ -61,12 +61,6 @@ PhysicalGraphicsStage::~PhysicalGraphicsStage() {
     vkDestroyRenderPass(device(), m_render_pass, nullptr);
 }
 
-FrameGraph::FrameGraph(VkDevice device, VkCommandPool command_pool, VmaAllocator allocator,
-                       const wrapper::Swapchain &swapchain)
-    : m_device(device), m_command_pool(command_pool), m_allocator(allocator), m_swapchain(swapchain) {
-    m_log = spdlog::default_logger()->clone("frame-graph");
-}
-
 void FrameGraph::build_image(const TextureResource *resource, PhysicalImage *phys, VmaAllocationCreateInfo *alloc_ci) {
     auto image_ci = wrapper::make_info<VkImageCreateInfo>();
     image_ci.imageType = VK_IMAGE_TYPE_2D;

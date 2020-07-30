@@ -330,7 +330,7 @@ private:
     VkCommandPool m_command_pool;
     VmaAllocator m_allocator;
     const wrapper::Swapchain &m_swapchain;
-    std::shared_ptr<spdlog::logger> m_log;
+    std::shared_ptr<spdlog::logger> m_log = spdlog::default_logger()->clone("frame-graph");
 
     // NOTE: unique_ptr must be used as Render* is just the base class
     std::vector<std::unique_ptr<RenderResource>> m_resources;
@@ -376,8 +376,8 @@ private:
     void record_command_buffers(const RenderStage *, PhysicalStage *);
 
 public:
-    FrameGraph(VkDevice device, VkCommandPool command_pool, VmaAllocator allocator,
-               const wrapper::Swapchain &swapchain);
+    FrameGraph(VkDevice device, VkCommandPool command_pool, VmaAllocator allocator, const wrapper::Swapchain &swapchain)
+        : m_device(device), m_command_pool(command_pool), m_allocator(allocator), m_swapchain(swapchain) {}
 
     /// @brief Adds either a render resource or render stage to the frame graph
     /// @return A mutable reference to the just-added resource or stage
