@@ -24,7 +24,7 @@ public:
     Framebuffer &operator=(const Framebuffer &) = delete;
     Framebuffer &operator=(Framebuffer &&) = default;
 
-    VkFramebuffer get() const {
+    [[nodiscard]] VkFramebuffer get() const {
         return m_framebuffer;
     }
 };
