@@ -6,6 +6,6 @@ namespace inexor::vulkan_renderer::wrapper {
 /// @example auto render_pass_ci = make_info<VkRenderPassCreateInfo>();
 /// @note Also zeros the returned struct
 template <typename T>
-T make_info();
+[[nodiscard]] T make_info();
 
 } // namespace inexor::vulkan_renderer::wrapper
