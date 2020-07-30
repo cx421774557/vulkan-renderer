@@ -53,7 +53,7 @@ public:
     /// @brief Acquires the next writable image in the swapchain
     /// @param semaphore A semaphore to signal once image acquisition has completed
     /// @returns The image index
-    std::uint32_t acquire_next_image(const wrapper::Semaphore &semaphore);
+    [[nodiscard]] std::uint32_t acquire_next_image(const wrapper::Semaphore &semaphore);
 
     /// @brief The swapchain needs to be recreated if it has been invalidated.
     /// @note We must pass width and height as call by reference!
