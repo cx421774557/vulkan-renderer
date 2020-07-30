@@ -129,6 +129,7 @@ void VulkanRenderer::recreate_swapchain() {
         std::make_unique<wrapper::Semaphore>(vkdevice->get_device(), "Image available semaphore");
     rendering_finished_semaphore =
         std::make_unique<wrapper::Semaphore>(vkdevice->get_device(), "Rendering finished semaphore");
+    game_camera.set_perspective(45.0f, (float)window->get_width() / (float)window->get_height(), 0.1f, 256.0f);
     vkDeviceWaitIdle(vkdevice->get_device());
 }
 
